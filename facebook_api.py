@@ -9,7 +9,7 @@ class FacebookAPIError(Exception):
     """Facebook API 错误类"""
     pass
 
-class FacebookAdsAPI:
+class FacebookAPI:
     """Facebook广告API客户端类"""
     
     API_VERSION = "v22.0"  # 使用最新的API版本
@@ -26,14 +26,16 @@ class FacebookAdsAPI:
         294: "广告账户被禁用"
     }
     
-    def __init__(self, access_token: str, ad_account_id: str):
+    def __init__(self, access_token: str, app_id: str, app_secret: str):
         """
         初始化API客户端
         @param access_token: API访问令牌
-        @param ad_account_id: 广告账户ID
+        @param app_id: 应用ID
+        @param app_secret: 应用密钥
         """
         self.access_token = access_token
-        self.ad_account_id = ad_account_id
+        self.app_id = app_id
+        self.app_secret = app_secret
         self.base_url = f"https://graph.facebook.com/{self.API_VERSION}"
         self.timeout = Config.REQUEST_TIMEOUT
         self.proxies = Config.PROXIES
@@ -213,7 +215,7 @@ class FacebookAdsAPI:
             "funding_source_details"
         ]
         
-        endpoint = f"{self.base_url}/act_{self.ad_account_id}"
+        endpoint = f"{self.base_url}/act_{self.app_id}"
         params = {
             "access_token": self.access_token,
             "fields": ",".join(fields)
@@ -364,7 +366,7 @@ class FacebookAdsAPI:
             # 构建单个请求
             request = {
                 "method": "GET",
-                "relative_url": f"act_{self.ad_account_id}/insights"
+                "relative_url": f"act_{self.app_id}/insights"
                                f"?fields=spend,impressions,clicks,reach,inline_link_clicks"
                                f"&time_range={json.dumps(date_range)}"
                                f"&level=account"
@@ -389,14 +391,14 @@ class FacebookAdsAPI:
         batch_requests = [
             {
                 "method": "GET",
-                "relative_url": f"act_{self.ad_account_id}/insights"
+                "relative_url": f"act_{self.app_id}/insights"
                                f"?fields=spend,impressions,clicks,reach,inline_link_clicks"
                                f"&time_range={json.dumps(time_range)}"
                                f"&level=account"
             },
             {
                 "method": "GET",
-                "relative_url": f"act_{self.ad_account_id}/campaigns"
+                "relative_url": f"act_{self.app_id}/campaigns"
                                f"?fields=name,objective,status,lifetime_budget"
             }
         ]
@@ -450,7 +452,7 @@ class FacebookAdsAPI:
                 "date_stop"
             ]
             
-            endpoint = f"{self.base_url}/act_{self.ad_account_id}/insights"
+            endpoint = f"{self.base_url}/act_{self.app_id}/insights"
             params = {
                 "access_token": self.access_token,
                 "fields": ",".join(fields),
