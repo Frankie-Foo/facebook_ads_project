@@ -17,7 +17,10 @@ if current_dir not in sys.path:
 from app_builder import create_app
 from config import Config
 
-app = Flask(__name__)
+app = Flask(__name__, 
+    template_folder='templates',  # 指定模板目录
+    static_folder='static'        # 指定静态文件目录
+)
 
 # 加载环境变量
 load_dotenv()
