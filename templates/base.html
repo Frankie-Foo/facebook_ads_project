@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}{% endblock %}</title>
+    <!-- Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- Ant Design Vue -->
+    <link rel="stylesheet" href="https://unpkg.com/ant-design-vue@4.0.0/dist/antd.css">
+    <script src="https://unpkg.com/ant-design-vue@4.0.0/dist/antd.js"></script>
+    <!-- ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f0f2f5;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 500;
+            color: rgba(0, 0, 0, 0.85);
+        }
+
+        h2 {
+            margin: 8px 0;
+            font-size: 30px;
+            font-weight: 500;
+            color: rgba(0, 0, 0, 0.85);
+        }
+
+        h3 {
+            margin: 0;
+            font-size: 14px;
+            color: rgba(0, 0, 0, 0.45);
+        }
+
+        p {
+            margin: 0;
+            font-size: 14px;
+            color: rgba(0, 0, 0, 0.65);
+        }
+
+        .ant-card {
+            border-radius: 2px;
+        }
+
+        .ant-card-body {
+            padding: 20px 24px;
+        }
+
+        .ant-layout-header {
+            height: 64px;
+            line-height: 64px;
+            background: #fff;
+            box-shadow: 0 1px 4px rgba(0,21,41,.08);
+        }
+
+        .ant-layout-content {
+            min-height: calc(100vh - 64px);
+            padding: 24px;
+        }
+
+        .ant-card {
+            margin-bottom: 24px;
+        }
+
+        .ant-card-head {
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .value-large {
+            font-size: 24px;
+            font-weight: 500;
+            color: rgba(0, 0, 0, 0.85);
+            margin-bottom: 8px;
+        }
+
+        .trend {
+            font-size: 14px;
+        }
+
+        .trend-up {
+            color: #52c41a;
+        }
+
+        .trend-down {
+            color: #ff4d4f;
+        }
+    </style>
+    {% block styles %}{% endblock %}
+</head>
+<body>
+    {% block content %}{% endblock %}
+    {% block scripts %}{% endblock %}
+</body>
+</html> 
