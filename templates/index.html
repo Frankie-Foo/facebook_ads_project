@@ -1018,7 +1018,7 @@
                 content: "查询中，请稍等...",
                 timestamp: new Date().toISOString(),
                 is_user: false,
-                isLoading: true  // 标记为加载消息
+                isLoading: true
             };
             appendMessage(loadingMessage);
             
@@ -1040,7 +1040,6 @@
                         messages.removeChild(loadingDiv);
                     }
                     
-                    // 显示实际回复
                     appendMessage(data.message);
                 }
             })
@@ -1053,7 +1052,6 @@
                     messages.removeChild(loadingDiv);
                 }
                 
-                // 显示错误消息
                 appendMessage({
                     content: '发送消息失败，请重试',
                     timestamp: new Date().toISOString(),

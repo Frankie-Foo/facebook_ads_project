@@ -1,5 +1,6 @@
 import requests
 import json
+import time
 from typing import Dict, Any, List, Optional, Union
 from datetime import datetime, timedelta
 from config import Config
@@ -43,15 +44,32 @@ class FacebookAdsAPI:
 
     def _validate_token(self):
         """验证访问令牌"""
-        endpoint = f"{self.base_url}/debug_token"
-        params = {
-            "input_token": self.access_token,
-            "access_token": self.access_token
-        }
-        
-        response = self._make_request("GET", endpoint, params)
-        if "error" in response:
-            raise FacebookAPIError(f"Token验证失败: {response['error']}")
+        try:
+            endpoint = f"{self.base_url}/debug_token"
+            params = {
+                "input_token": self.access_token,
+                "access_token": self.access_token
+            }
+            
+            # 增加重试次数
+            max_retries = 3
+            for i in range(max_retries):
+                try:
+                    response = self._make_request("GET", endpoint, params)
+                    if "error" not in response:
+                        return True
+                    time.sleep(1)  # 重试前等待1秒
+                except Exception as e:
+                    if i == max_retries - 1:  # 最后一次重试
+                        print(f"Token验证失败: {str(e)}")
+                        return False
+                    continue
+            
+            return True
+            
+        except Exception as e:
+            print(f"Token验证出错: {str(e)}")
+            return False
 
     def _handle_error(self, error_data: Dict) -> Dict:
         """

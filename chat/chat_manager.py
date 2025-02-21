@@ -26,28 +26,31 @@ class ChatManager:
         # 如果是用户消息，使用AI分析并生成回复
         if is_user:
             try:
-                # 如果消息包含数据分析请求
-                if any(keyword in message for keyword in ['分析', '数据', '报告']):
-                    # 获取最近的广告数据
-                    ad_data = self.fb_client.get_campaign_insights() if self.fb_client else None
-                    context = {'ad_data': ad_data} if ad_data else {}
-                else:
-                    context = {}
-                
                 # 获取AI回复
                 ai_response = self.ai_analyzer.analyze_and_respond(
                     message,
-                    self.conversations[session_id],
-                    **context
+                    self.conversations[session_id]
                 )
                 
                 # 记录AI回复
-                self.add_message(session_id, ai_response, is_user=False)
+                ai_message = {
+                    'content': ai_response,
+                    'timestamp': datetime.now().isoformat(),
+                    'is_user': False
+                }
+                self.conversations[session_id].append(ai_message)
+                return ai_message
                 
             except Exception as e:
                 print(f"处理消息错误: {str(e)}")
                 error_message = "抱歉，处理您的请求时出现错误。"
-                self.add_message(session_id, error_message, is_user=False)
+                error_data = {
+                    'content': error_message,
+                    'timestamp': datetime.now().isoformat(),
+                    'is_user': False
+                }
+                self.conversations[session_id].append(error_data)
+                return error_data
         
         return message_data
     

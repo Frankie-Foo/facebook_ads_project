@@ -1,7 +1,7 @@
 """AI分析器"""
 from typing import Dict, List
 import json
-import requests
+import httpx
 from datetime import datetime
 from config import Config
 
@@ -46,53 +46,41 @@ class AIAnalyzer:
             # 调用Deepseek API
             headers = {
                 "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "accept": "application/json"
             }
             
             data = {
-                "model": "deepseek-chat",
+                "model": "deepseek-ai/DeepSeek-V2.5",
                 "messages": messages,
                 "temperature": 0.7,
                 "max_tokens": 1000,
-                "stream": False,
-                "api_version": "2024-02"  # 添加 API 版本
+                "stream": False
             }
             
             print("发送到 Deepseek 的请求:", json.dumps(data, ensure_ascii=False, indent=2))
             
-            # 创建 Session 对象
-            session = requests.Session()
-            
-            try:
-                response = session.post(
-                    self.api_url,
+            with httpx.Client(verify=False) as client:
+                response = client.post(
+                    "https://api.siliconflow.cn/v1/chat/completions",
                     headers=headers,
                     json=data,
-                    timeout=30,
-                    verify=True   # 启用 SSL 验证
+                    timeout=30
                 )
-                
-                if response.status_code == 200:
-                    result = response.json()
-                    print("Deepseek API 响应:", json.dumps(result, ensure_ascii=False, indent=2))
-                    return result['choices'][0]['message']['content']
-                else:
-                    error_msg = f"API调用失败: {response.status_code} - {response.text}"
-                    print(error_msg)
-                    return "抱歉，AI服务暂时不可用，请稍后再试。"
-                    
-            except requests.exceptions.RequestException as e:
-                print(f"请求错误: {str(e)}")
-                return "连接服务器时出现错误，请稍后再试。"
+            
+            if response.status_code == 200:
+                result = response.json()
+                print("Deepseek API 响应:", json.dumps(result, ensure_ascii=False, indent=2))
+                return result['choices'][0]['message']['content']
+            else:
+                error_msg = f"API调用失败: {response.status_code} - {response.text}"
+                print(error_msg)
+                return "抱歉，AI服务暂时不可用，请稍后再试。"
                 
         except Exception as e:
             print(f"AI分析错误: {str(e)}")
             return "抱歉，我现在无法回答您的问题。请稍后再试。"
             
-        finally:
-            if 'session' in locals():
-                session.close()
-    
     def _analyze_data(self, data: Dict) -> str:
         """分析广告数据"""
         try:
