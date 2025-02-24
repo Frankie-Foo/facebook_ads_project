@@ -308,9 +308,16 @@
         <div class="row">
             <div class="col-md-8">
                 <div class="control-panel">
+                    <!-- 添加账户切换按钮 -->
+                    <div class="mb-3">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-primary active" onclick="switchAccount('1951712498622991')" id="account1Btn">账户1</button>
+                            <button type="button" class="btn btn-outline-primary" onclick="switchAccount('1681943649271015')" id="account4Btn">账户4</button>
+                        </div>
+                    </div>
                     <div class="d-flex justify-content-between align-items-center flex-wrap">
                         <div class="btn-group mb-2 mb-md-0" role="group">
-                            <button type="button" class="btn btn-outline-primary" onclick="setDateRange('yesterday')">昨日</button>
+                            <button type="button" class="btn btn-outline-primary" onclick="setDateRange('yesterday')">昨日1</button>
                             <button type="button" class="btn btn-outline-primary" onclick="setDateRange('last30')">最近30天</button>
                             <button type="button" class="btn btn-outline-primary" onclick="setDateRange('lastMonth')">上月</button>
                             <button type="button" class="btn btn-outline-primary" onclick="setDateRange('thisMonth')">本月</button>
@@ -447,6 +454,28 @@
     </div>
 
     <script>
+        // 修改当前账户的全局变量，使用实际的账户ID
+        let currentAccount = '1951712498622991'; // 默认为账户1的ID
+
+        // 修改切换账户的函数
+        function switchAccount(accountId) {
+            currentAccount = accountId;
+            
+            // 更新按钮状态
+            document.getElementById('account1Btn').classList.remove('active');
+            document.getElementById('account4Btn').classList.remove('active');
+            
+            // 根据账户ID设置对应按钮的激活状态
+            if (accountId === '1951712498622991') {
+                document.getElementById('account1Btn').classList.add('active');
+            } else if (accountId === '1681943649271015') {
+                document.getElementById('account4Btn').classList.add('active');
+            }
+            
+            // 重新获取数据
+            fetchDataWithDateRange();
+        }
+
         // 设置日期范围
         function setDateRange(type) {
             const today = new Date();
@@ -500,7 +529,8 @@
             }
             
             try {
-                const response = await fetch(`/api/detailed-insights?start_date=${startDateElement.value}&end_date=${endDateElement.value}`);
+                // 在 API 请求中添加账户参数
+                const response = await fetch(`/api/detailed-insights?start_date=${startDateElement.value}&end_date=${endDateElement.value}&account=${currentAccount}`);
                 const data = await response.json();
                 
                 if (!data.data || data.data.length === 0) {
@@ -854,8 +884,23 @@
             return false;
         };
 
-        // 页面加载完成后设置默认日期范围（最近30天）
+        // 修改页面加载完成后的初始化代码
         document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+            
+            if (savedTheme === 'dark') {
+                icon.textContent = '☀️';
+                text.textContent = '日间模式';
+            }
+            
+            // 设置默认账户为账户1
+            currentAccount = '1951712498622991';
+            document.getElementById('account1Btn').classList.add('active');
+            
             setDateRange('last30');
         });
 
@@ -972,22 +1017,6 @@
                 });
             }
         }
-
-        // 页面加载时检查并应用保存的主题设置
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            
-            const icon = document.getElementById('theme-icon');
-            const text = document.getElementById('theme-text');
-            
-            if (savedTheme === 'dark') {
-                icon.textContent = '☀️';
-                text.textContent = '日间模式';
-            }
-            
-            setDateRange('last30');
-        });
 
         // 处理回车键发送
         function handleKeyPress(event) {

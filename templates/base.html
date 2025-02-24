@@ -8,6 +8,8 @@
     <!-- Ant Design Vue -->
     <link rel="stylesheet" href="https://unpkg.com/ant-design-vue@4.0.0/dist/antd.css">
     <script src="https://unpkg.com/ant-design-vue@4.0.0/dist/antd.js"></script>
+    <!-- Ant Design Icons -->
+    <script src="https://unpkg.com/@ant-design/icons-vue@7.0.0/dist/index.umd.min.js"></script>
     <!-- ECharts -->
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     
@@ -92,6 +94,7 @@
         }
     </style>
     {% block styles %}{% endblock %}
+    {% block head %}{% endblock %}
 </head>
 <body>
     {% block content %}{% endblock %}

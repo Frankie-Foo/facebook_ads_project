@@ -7,6 +7,7 @@ import os
 import sys
 from flask import Flask, jsonify, request, make_response
 import uuid
+from config import Config
 
 # 添加当前目录到Python路径
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -14,7 +15,6 @@ if current_dir not in sys.path:
     sys.path.append(current_dir)
 
 from app_builder import create_app
-from config import Config
 from facebook_api import FacebookAdsAPI
 from chat import ChatManager
 
@@ -30,6 +30,7 @@ def main():
     
     # 创建Flask应用
     app = create_app(fb_client)
+    app.config.from_object(Config)
     
     # 初始化聊天管理器，传入fb_client以便访问广告数据
     chat_manager = ChatManager(fb_client)
@@ -37,12 +38,20 @@ def main():
     @app.route('/api/detailed-insights')
     def get_detailed_insights():
         try:
-            # 获取日期参数
+            account_id = request.args.get('account')
             start_date = request.args.get('start_date')
             end_date = request.args.get('end_date')
             
-            # 调用 API 获取数据
-            data = fb_client.get_detailed_insights(start_date, end_date)
+            # 验证账户是否存在
+            if account_id not in app.config['FB_AD_ACCOUNTS']:
+                return jsonify({'error': '无效的账户ID'}), 400
+            
+            # 使用指定的账户ID获取数据
+            data = fb_client.get_detailed_insights(
+                start_date=start_date,
+                end_date=end_date,
+                account_id=account_id
+            )
             
             return jsonify({
                 'data': data.get('data', []),
@@ -53,6 +62,7 @@ def main():
             })
             
         except Exception as e:
+            print(f"获取数据失败: {str(e)}")
             return jsonify({
                 'error': str(e)
             }), 500

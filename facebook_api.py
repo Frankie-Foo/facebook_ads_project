@@ -27,15 +27,16 @@ class FacebookAdsAPI:
         294: "广告账户被禁用"
     }
     
-    def __init__(self, access_token: str, ad_account_id: str):
+    def __init__(self, access_token=None, ad_account_id=None):
         """
         初始化API客户端
         @param access_token: API访问令牌
         @param ad_account_id: 广告账户ID
         """
-        self.access_token = access_token
-        self.ad_account_id = ad_account_id
-        self.base_url = f"https://graph.facebook.com/{self.API_VERSION}"
+        self.base_url = Config.FB_API_BASE_URL
+        self.api_version = Config.FB_API_VERSION
+        self.default_access_token = access_token
+        self.default_account_id = ad_account_id
         self.timeout = Config.REQUEST_TIMEOUT
         self.proxies = Config.PROXIES
         
@@ -47,8 +48,8 @@ class FacebookAdsAPI:
         try:
             endpoint = f"{self.base_url}/debug_token"
             params = {
-                "input_token": self.access_token,
-                "access_token": self.access_token
+                "input_token": self.default_access_token,
+                "access_token": self.default_access_token
             }
             
             # 增加重试次数
@@ -143,7 +144,7 @@ class FacebookAdsAPI:
         """
         endpoint = f"{self.base_url}/{object_id}"
         params = {
-            "access_token": self.access_token,
+            "access_token": self.default_access_token,
             "fields": ",".join(fields)
         }
         
@@ -159,7 +160,7 @@ class FacebookAdsAPI:
         """
         endpoint = f"{self.base_url}/{parent_id}/{edge}"
         params = {
-            "access_token": self.access_token,
+            "access_token": self.default_access_token,
             **data
         }
         
@@ -174,7 +175,7 @@ class FacebookAdsAPI:
         """
         endpoint = f"{self.base_url}/{object_id}"
         params = {
-            "access_token": self.access_token,
+            "access_token": self.default_access_token,
             **data
         }
         
@@ -188,7 +189,7 @@ class FacebookAdsAPI:
         """
         endpoint = f"{self.base_url}/{object_id}"
         params = {
-            "access_token": self.access_token
+            "access_token": self.default_access_token
         }
         
         return self._make_request("DELETE", endpoint, params)
@@ -211,7 +212,7 @@ class FacebookAdsAPI:
             }
             
             params = {
-                "access_token": self.access_token
+                "access_token": self.default_access_token
             }
             
             return self._make_request("POST", endpoint, params, files=files)
@@ -231,9 +232,9 @@ class FacebookAdsAPI:
             "funding_source_details"
         ]
         
-        endpoint = f"{self.base_url}/act_{self.ad_account_id}"
+        endpoint = f"{self.base_url}/act_{self.default_account_id}"
         params = {
-            "access_token": self.access_token,
+            "access_token": self.default_access_token,
             "fields": ",".join(fields)
         }
         
@@ -264,7 +265,7 @@ class FacebookAdsAPI:
         
         endpoint = f"{self.base_url}/{campaign_id}/insights"
         params = {
-            "access_token": self.access_token,
+            "access_token": self.default_access_token,
             "fields": ",".join(fields),
             "level": "campaign"
         }
@@ -293,7 +294,7 @@ class FacebookAdsAPI:
         
         endpoint = f"{self.base_url}/{campaign_id}/adsets"
         params = {
-            "access_token": self.access_token,
+            "access_token": self.default_access_token,
             "fields": ",".join(fields)
         }
         
@@ -316,7 +317,7 @@ class FacebookAdsAPI:
         
         endpoint = f"{self.base_url}/{adset_id}/ads"
         params = {
-            "access_token": self.access_token,
+            "access_token": self.default_access_token,
             "fields": ",".join(fields)
         }
         
@@ -332,7 +333,7 @@ class FacebookAdsAPI:
         
         # 准备批量请求数据
         data = {
-            'access_token': self.access_token,
+            'access_token': self.default_access_token,
             'batch': json.dumps(batch_requests),
             'include_headers': 'false'  # 不包含响应头以提高效率
         }
@@ -382,7 +383,7 @@ class FacebookAdsAPI:
             # 构建单个请求
             request = {
                 "method": "GET",
-                "relative_url": f"act_{self.ad_account_id}/insights"
+                "relative_url": f"act_{self.default_account_id}/insights"
                                f"?fields=spend,impressions,clicks,reach,inline_link_clicks"
                                f"&time_range={json.dumps(date_range)}"
                                f"&level=account"
@@ -407,14 +408,14 @@ class FacebookAdsAPI:
         batch_requests = [
             {
                 "method": "GET",
-                "relative_url": f"act_{self.ad_account_id}/insights"
+                "relative_url": f"act_{self.default_account_id}/insights"
                                f"?fields=spend,impressions,clicks,reach,inline_link_clicks"
                                f"&time_range={json.dumps(time_range)}"
                                f"&level=account"
             },
             {
                 "method": "GET",
-                "relative_url": f"act_{self.ad_account_id}/campaigns"
+                "relative_url": f"act_{self.default_account_id}/campaigns"
                                f"?fields=name,objective,status,lifetime_budget"
             }
         ]
@@ -426,65 +427,41 @@ class FacebookAdsAPI:
             "campaigns": results[1] if not isinstance(results[1], dict) or 'error' not in results[1] else []
         }
 
-    def get_detailed_insights(self, start_date: str = None, end_date: str = None) -> Dict[str, Any]:
+    def get_detailed_insights(self, start_date, end_date, account_id=None):
         """
-        获取详细的广告数据
-        @param start_date: 开始日期 (YYYY-MM-DD)，可选
-        @param end_date: 结束日期 (YYYY-MM-DD)，可选
-        @return: 广告数据
+        获取指定账户的广告数据
         """
+        # 使用传入的account_id或默认账户
+        current_account_id = account_id or self.default_account_id
+        
+        # 使用统一的access_token
+        access_token = self.default_access_token
+        
+        endpoint = f"{self.base_url}/act_{current_account_id}/insights"
+        
+        # 修复字段和时间范围参数的格式
+        params = {
+            'access_token': access_token,
+            'level': 'account',
+            'fields': 'spend,impressions,clicks,ctr,cpc,actions,action_values,inline_link_clicks,inline_link_click_ctr',  # 改为逗号分隔的字符串
+            'time_range': json.dumps({  # 使用 json.dumps 序列化时间范围
+                'since': start_date,
+                'until': end_date
+            }),
+            'time_increment': 1
+        }
+        
         try:
-            print(f"请求参数: start_date={start_date}, end_date={end_date}")
+            print(f"Request URL: {endpoint}")
+            print(f"Request params: {params}")  # 添加日志
             
-            today = datetime.now()
+            response = requests.get(endpoint, params=params)
+            response.raise_for_status()
             
-            if not end_date and not start_date:
-                end_date = today.strftime('%Y-%m-%d')
-                start_date = (today - timedelta(days=30)).strftime('%Y-%m-%d')
+            print(f"Response: {response.text}")  # 添加日志
+            return response.json()
             
-            print(f"使用日期范围: {start_date} 到 {end_date}")
-            
-            time_range = {
-                "since": start_date,
-                "until": end_date
-            }
-            
-            fields = [
-                "spend",
-                "inline_link_clicks",
-                "impressions",
-                "clicks",
-                "inline_link_click_ctr",  # 链接点击率
-                "cpc",
-                "reach",
-                "frequency",
-                "cost_per_inline_link_click",
-                "website_ctr",
-                "website_purchase_roas",
-                "purchase_roas",
-                "actions",
-                "action_values",
-                "date_start",
-                "date_stop"
-            ]
-            
-            endpoint = f"{self.base_url}/act_{self.ad_account_id}/insights"
-            params = {
-                "access_token": self.access_token,
-                "fields": ",".join(fields),
-                "time_range": json.dumps(time_range),
-                "time_increment": 1,
-                "level": "account"
-            }
-            
-            print(f"API请求参数: {json.dumps(params, indent=2)}")
-            response = self._make_request("GET", endpoint, params)
-            
-            print(f"API响应状态: {'成功' if 'data' in response else '失败'}")
-            print(f"返回数据条数: {len(response.get('data', []))}")
-            
-            return response
-            
-        except Exception as e:
-            print(f"获取数据时发生错误: {str(e)}")
+        except requests.exceptions.RequestException as e:
+            print(f"API请求失败: {str(e)}")
+            print(f"Response content: {e.response.text if hasattr(e, 'response') else 'No response'}")  # 添加错误响应内容
             raise 
